@@ -33,6 +33,8 @@ Windows 将 `./gradlew` 替换为 `.\gradlew.bat`。
 
 产物位于 `app/build/outputs/apk/`，配置有 arm64-v8a、armeabi-v7a 和 universal 分包。体积受视频 SDK 影响。
 
+0.56起原生库启用 `useLegacyPackaging = true`，让APK中的原生库压缩存储并由系统在安装时解压。此设置主要降低分发体积，安装后的占用会增加；没有裁剪视频库。图片使用无损WebP，保留原像素和尺寸。当前没有启用R8代码混淆与激进裁剪。
+
 ## 签名
 
 维护者既有预览版使用私有保管的签名文件，本仓库不提供该文件或密码。

@@ -47,6 +47,10 @@ private val LocalBackGestureMotion=staticCompositionLocalOf<BackGestureMotion?>{
                     else motion.progress.animateTo(0f,spring(dampingRatio=1f,stiffness=550f))
                 }
                 committed=true;latest()
+            }else if(motion.generation==generation){
+                // A route can become non-dismissible while the gesture is in flight.
+                // Restore its visible frame rather than leave it half transformed.
+                motion.progress.animateTo(0f,if(policy.full)spring(dampingRatio=1f,stiffness=550f)else androidx.compose.animation.core.snap())
             }
             // Keep a committed outgoing scene at its final frame until disposal.
             // Restoring it here flashes the child while its parent starts an exit transition.

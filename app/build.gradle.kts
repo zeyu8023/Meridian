@@ -20,8 +20,8 @@ android {
         minSdk = 26
         targetSdk = 35
         testInstrumentationRunner = "app.meridian.mobile.VisualInspection"
-        versionCode = 52
-        versionName = "0.52.0"
+        versionCode = 56
+        versionName = "0.56.0"
     }
 
     signingConfigs.getByName("debug") {
@@ -50,6 +50,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    // Preserve every native library; compress transport bytes and let Android extract at install.
+    packaging { jniLibs { useLegacyPackaging = true } }
     androidResources { ignoreAssetsPattern = "vehicles:models" }
     splits { abi { isEnable = true; reset(); include("arm64-v8a", "armeabi-v7a"); isUniversalApk = true } }
     buildFeatures {

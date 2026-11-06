@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
@@ -35,7 +36,9 @@ internal val LocalMenuLabelSize=staticCompositionLocalOf{17.sp}
   Box{
    Text(options.firstOrNull{it.first==value}?.second.orEmpty(),fontSize=LocalMenuLabelSize.current,fontWeight=FontWeight.Medium,color=ink)
    if(open)Popup(popupPositionProvider=position,onDismissRequest={open=false},properties=PopupProperties(focusable=true)){
-    val popupView=LocalView.current;val popupContext=LocalContext.current;val blur=LocalAppearance.current.glass
+    val popupView=LocalView.current;val popupContext=LocalContext.current
+    val windowManager=popupContext.getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager
+    val blur=LocalAppearance.current.glass&&android.os.Build.VERSION.SDK_INT>=31&&windowManager.isCrossWindowBlurEnabled
     DisposableEffect(popupView,blur){
      if(blur&&android.os.Build.VERSION.SDK_INT>=31)runCatching{
       val root=popupView.rootView;val params=root.layoutParams as? android.view.WindowManager.LayoutParams
@@ -43,9 +46,9 @@ internal val LocalMenuLabelSize=staticCompositionLocalOf{17.sp}
      }
      onDispose{}
     }
-    Column(Modifier.menuArrival().background(glassWhite.copy(alpha=if(blur).97f else 1f),RoundedCornerShape(18.dp)).width(214.dp).heightIn(max=340.dp).then(if(blur)Modifier.cinemaGlass(RoundedCornerShape(18.dp))else Modifier.border(.6.dp,glassEdge,RoundedCornerShape(18.dp))).verticalScroll(rememberScrollState()).padding(6.dp)){
-     options.forEach{(id,label)->Row(Modifier.fillMaxWidth().heightIn(min=44.dp).clip(RoundedCornerShape(12.dp)).background(if(id==value)softWash else androidx.compose.ui.graphics.Color.Transparent).clickable(role=Role.RadioButton){open=false;onSelect(id)}.padding(horizontal=12.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
-      Text(label,fontSize=14.sp,lineHeight=20.sp,color=ink,modifier=Modifier.weight(1f))
+    Column(Modifier.menuArrival().widthIn(min=176.dp,max=280.dp).width(IntrinsicSize.Max).heightIn(max=340.dp).then(if(blur)Modifier.cinemaGlass(RoundedCornerShape(18.dp))else Modifier.background(glassWhite,RoundedCornerShape(18.dp)).border(.6.dp,glassEdge,RoundedCornerShape(18.dp))).verticalScroll(rememberScrollState()).padding(6.dp)){
+     options.forEach{(id,label)->Row(Modifier.fillMaxWidth().heightIn(min=48.dp).clip(RoundedCornerShape(12.dp)).background(if(id==value)accent.copy(alpha=.12f) else androidx.compose.ui.graphics.Color.Transparent).selectable(selected=id==value,role=Role.RadioButton){open=false;onSelect(id)}.padding(horizontal=12.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
+      Text(label,fontSize=14.sp,lineHeight=20.sp,fontWeight=if(id==value)FontWeight.SemiBold else FontWeight.Normal,color=if(id==value)readableTint(accent,glassWhite) else ink,modifier=Modifier.weight(1f))
       if(id==value)Icon(Icons.Outlined.Check,null,Modifier.size(16.dp),tint=accent)
      }}
     }

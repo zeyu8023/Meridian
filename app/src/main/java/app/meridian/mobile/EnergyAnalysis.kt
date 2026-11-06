@@ -42,7 +42,7 @@ import kotlin.math.*
  if(detail!=null)TripDetailPage(api,detail!!){detail=null}
  if(busy)FlowLoading(label="正在读取关联行程…")
  if(issue.isNotBlank())Text(issue,color=MaterialTheme.colorScheme.error,fontSize=12.sp)
- statisticsMetricGroups(root).filter{it.key in listOf("energy","efficiency")}.forEach{group->Panel{SectionTitle(group.title,if(group.key=="efficiency")Icons.Outlined.DonutLarge else Icons.Outlined.Bolt);Text("最近 $days 天",fontSize=11.sp,color=muted);StatisticsCards(group.items,trend,days,group.scope)}}
+ statisticsMetricGroups(root).filter{it.key in listOf("energy","efficiency")}.forEach{group->Panel{SectionTitle((if(group.scope=="lifetime")"累计 · "else"周期 · ")+group.title,if(group.key=="efficiency")Icons.Outlined.DonutLarge else Icons.Outlined.Bolt);Text("最近 $days 天",fontSize=11.sp,color=muted);StatisticsCards(group.items,trend,days,group.scope)}}
  val dashboard=root.optJSONObject("periodDashboard")
  (dashboard?.optJSONArray("charts")?:JSONArray()).objects().forEach{chart->val key=chart.safeText("key");val points=chart.optJSONArray("points")?:JSONArray()
   when(key){

@@ -31,7 +31,7 @@ import kotlin.math.roundToInt
  val motion=LocalAppMotion.current
  CompositionLocalProvider(LocalDensity provides Density(baseDensity.density*navScale,baseDensity.fontScale)){
   val liquid=enabled&&options.glassStyle=="liquid"&&android.os.Build.VERSION.SDK_INT>=33
-  val rail=navigationRailHeightDp(options.showNavigationLabels,14f*baseDensity.fontScale,navScale).dp
+  val rail=navigationRailHeightDp(options.showNavigationLabels,16f*baseDensity.fontScale,navScale).dp
   val currentTab by rememberUpdatedState(tab);val change by rememberUpdatedState(onTab);val scrollTop by rememberUpdatedState(onReselect)
   val tapTracker=remember{NavigationTapTracker()}
   val select:(Int)->Unit={chosen->
@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
    }
 
 
-   Box(Modifier.fillMaxWidth().offset(y=(-9).dp),contentAlignment=Alignment.TopCenter){Box(Modifier.size(50.dp).clickable(interactionSource=remember{androidx.compose.foundation.interaction.MutableInteractionSource()},indication=null,onClickLabel="AI助手"){select(2)},contentAlignment=Alignment.Center){AssistantOrb(size=48.dp,quiet=true)}}
+   Box(Modifier.fillMaxWidth().offset(y=(-6).dp),contentAlignment=Alignment.TopCenter){Box(Modifier.size(50.dp).clickable(interactionSource=remember{androidx.compose.foundation.interaction.MutableInteractionSource()},indication=null){select(2)}.clearAndSetSemantics{},contentAlignment=Alignment.Center){AssistantOrb(size=48.dp,quiet=true)}}
 
 
   }
@@ -72,6 +72,6 @@ import kotlin.math.roundToInt
 @Composable private fun DockItems(tab:Int,accentIndex:Int?,foreground:Color,highlight:Color,modifier:Modifier,onTab:(Int)->Unit,mirror:Boolean=false){
  val labels=listOf("爱车","行程","AI助手","统计","我的");val icons=listOf(Icons.Filled.DirectionsCar,Icons.Filled.Route,Icons.Filled.AutoAwesome,Icons.Filled.BarChart,Icons.Filled.Person)
  Row(modifier){labels.forEachIndexed{i,label->Column(Modifier.weight(1f).fillMaxHeight().semantics{contentDescription=label}.then(if(mirror)Modifier else Modifier.selectable(selected=tab==i,role=Role.Tab,onClick={onTab(i)})),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center){
-  Box(Modifier.size(34.dp),contentAlignment=Alignment.Center){if(i==2)Spacer(Modifier.size(34.dp))else Icon(icons[i],null,tint=if(accentIndex==i)highlight else foreground,modifier=Modifier.size(24.dp))};if(LocalAppearance.current.showNavigationLabels){Spacer(Modifier.height(3.dp));Text(label,color=if(accentIndex==i)highlight else foreground,fontSize=11.sp,lineHeight=14.sp,fontWeight=FontWeight.Medium)}
+  Box(Modifier.size(34.dp),contentAlignment=Alignment.Center){if(i==2)Spacer(Modifier.size(34.dp))else Icon(icons[i],null,tint=if(accentIndex==i)highlight else foreground,modifier=Modifier.size(24.dp))};if(LocalAppearance.current.showNavigationLabels){Spacer(Modifier.height(3.dp));Text(label,color=if(accentIndex==i)highlight else foreground,fontSize=12.sp,lineHeight=16.sp,fontWeight=FontWeight.Medium)}
  }}}
 }

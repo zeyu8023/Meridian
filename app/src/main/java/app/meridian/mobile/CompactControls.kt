@@ -20,8 +20,8 @@ import androidx.compose.ui.window.*
  Box(modifier){ToolbarActionStrip(listOf(ToolbarAction(icon,label,enabled){onClick()}))}
 }
 @Composable fun <T> CompactSegments(options:List<Pair<T,String>>,selected:T,onSelect:(T)->Unit,modifier:Modifier=Modifier){
- Row(modifier.fillMaxWidth().height(IntrinsicSize.Max).heightIn(min=44.dp).then(if(LocalAppearance.current.glass)Modifier.cinemaGlass(RoundedCornerShape(14.dp))else Modifier.background(softWash,RoundedCornerShape(14.dp))).padding(4.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)){
-  options.forEach{(id,label)->Box(Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(11.dp)).background(if(id==selected)accent else androidx.compose.ui.graphics.Color.Transparent).clickable(role=Role.RadioButton){onSelect(id)}.semantics{this.selected=id==selected}.padding(horizontal=6.dp,vertical=6.dp),contentAlignment=Alignment.Center){Text(label,fontSize=12.sp,lineHeight=18.sp,fontWeight=if(id==selected)FontWeight.SemiBold else FontWeight.Normal,color=if(id==selected)themeOnAccent(accent) else muted)}
+ Row(modifier.fillMaxWidth().height(IntrinsicSize.Max).heightIn(min=56.dp).then(if(LocalAppearance.current.glass)Modifier.cinemaGlass(RoundedCornerShape(14.dp))else Modifier.background(softWash,RoundedCornerShape(14.dp))).padding(4.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)){
+  options.forEach{(id,label)->Box(Modifier.weight(1f).fillMaxHeight().heightIn(min=48.dp).clip(RoundedCornerShape(11.dp)).background(if(id==selected)accent else androidx.compose.ui.graphics.Color.Transparent).clickable(role=Role.RadioButton){onSelect(id)}.semantics{this.selected=id==selected}.padding(horizontal=6.dp,vertical=6.dp),contentAlignment=Alignment.Center){Text(label,fontSize=13.sp,lineHeight=19.sp,fontWeight=if(id==selected)FontWeight.SemiBold else FontWeight.Normal,color=if(id==selected)themeOnAccent(accent) else muted)}
   }
  }
 }

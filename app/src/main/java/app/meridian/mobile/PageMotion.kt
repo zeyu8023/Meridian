@@ -22,8 +22,9 @@ internal val LocalPageMotionHandled=staticCompositionLocalOf{false}
 @Composable fun rememberPageMotion(onClose:()->Unit):Pair<State<Float>,()->Unit>{
  val policy=LocalAppMotion.current;val scope=rememberCoroutineScope();val latest by rememberUpdatedState(onClose)
  val progress=remember{Animatable(if(policy.enabled)0f else 1f)};var closing by remember{mutableStateOf(false)}
- LaunchedEffect(policy.mode){if(!closing){withFrameNanos{};progress.animateTo(1f,tween(policy.duration(360),easing=SceneEasing))}}
- val close:()->Unit={if(!closing){closing=true;scope.launch{progress.animateTo(0f,tween(policy.duration(280),easing=SceneEasing));latest()}}}
+ val entering=remember{mutableStateOf<Job?>(null)}
+ LaunchedEffect(policy.mode){if(!closing){entering.value=currentCoroutineContext()[Job];withFrameNanos{};progress.animateTo(1f,tween(policy.duration(360),easing=SceneEasing))}}
+ val close:()->Unit={if(!closing){closing=true;entering.value?.cancel();scope.launch{progress.animateTo(0f,tween(policy.duration(280),easing=SceneEasing));latest()}}}
  return progress.asState() to close
 }
 /** Vertical shared-axis presence modeled on the supplied second reference clip. */
@@ -61,5 +62,5 @@ internal val LocalPageMotionHandled=staticCompositionLocalOf{false}
 }
 @Composable internal fun Modifier.cardClick(enabled:Boolean=true,onClick:()->Unit):Modifier{
  val source=remember{MutableInteractionSource()}
- return motionPress(source).clickable(interactionSource=source,indication=null,enabled=enabled,onClick=onClick)
+ return motionPress(source).clickable(interactionSource=source,indication=null,enabled=enabled,role=androidx.compose.ui.semantics.Role.Button,onClick=onClick)
 }

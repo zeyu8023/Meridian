@@ -20,7 +20,7 @@ import kotlin.math.*
 
 internal val LocalHomeCardTint=staticCompositionLocalOf{Color.Transparent}
 internal val LocalReferenceHome=staticCompositionLocalOf{false}
-@Composable internal fun ReferenceCard(content:@Composable ColumnScope.()->Unit){Column(Modifier.fillMaxWidth().fillMaxHeight().themeCardShadow(RoundedCornerShape(18.dp)).background(Brush.verticalGradient(listOf(if(LocalHomeCardTint.current==Color.Transparent)glassWhite else androidx.compose.ui.graphics.lerp(glassWhite,LocalHomeCardTint.current,if(LocalPalette.current.dark).22f else .24f),glassWhite)),RoundedCornerShape(18.dp)).border(.6.dp,glassEdge,RoundedCornerShape(18.dp)).padding(14.dp),verticalArrangement=Arrangement.spacedBy(10.dp),content=content)}
+@Composable internal fun ReferenceCard(content:@Composable ColumnScope.()->Unit){Column(Modifier.fillMaxWidth().fillMaxHeight().themeCardShadow(RoundedCornerShape(18.dp)).background(Brush.verticalGradient(listOf(if(LocalHomeCardTint.current==Color.Transparent)glassWhite else androidx.compose.ui.graphics.lerp(glassWhite,LocalHomeCardTint.current,if(LocalPalette.current.dark).22f else .24f),glassWhite)),RoundedCornerShape(18.dp)).themeCardEdge(RoundedCornerShape(18.dp)).padding(14.dp),verticalArrangement=Arrangement.spacedBy(10.dp),content=content)}
 @Composable internal fun HomeMiniTrend(rows:JSONArray,title:String="近30天里程 · km"){
  val samples=chartSamples(rows,"mileage",.001);var selected by remember(rows.toString()){mutableIntStateOf(-1)};val tint=accent;val grid=glassEdge
  if(samples.isNotEmpty()){

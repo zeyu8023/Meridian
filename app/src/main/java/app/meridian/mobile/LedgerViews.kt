@@ -24,7 +24,7 @@ import kotlin.math.*
  val base=when(id){"charge"->Color(0xFF32967C);"toll"->Color(0xFF427CD1);"repair"->Color(0xFFC58255);"maintenance"->Color(0xFFC89A48);"accessories"->Color(0xFF8F78BC);"parking"->Color(0xFF708DA7);"insurance"->Color(0xFF6D8B7E);"wash"->Color(0xFF5BA7B5);else->Color(0xFF88909B)}
  val tone=lerp(base,accent,.16f);return if(LocalPalette.current.dark)lerp(tone,Color.White,.17f)else tone
 }
-@Composable internal fun LedgerPaper(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit){val shape=RoundedCornerShape(22.dp);Column(modifier.fillMaxWidth().themeCardShadow(shape).background(glassWhite,shape).border(.5.dp,glassEdge.copy(alpha=.6f),shape).padding(18.dp),verticalArrangement=Arrangement.spacedBy(14.dp),content=content)}
+@Composable internal fun LedgerPaper(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit){val shape=RoundedCornerShape(22.dp);Column(modifier.fillMaxWidth().themeCardShadow(shape).background(glassWhite,shape).themeCardEdge(shape,.6f).padding(18.dp),verticalArrangement=Arrangement.spacedBy(14.dp),content=content)}
 internal fun ledgerTitle(entry:JSONObject):String{
  val detail=entry.optJSONObject("details")?:JSONObject();val tags=entry.optJSONArray("tags")?.objects().orEmpty().map{it.optString("label")}
  return detail.optString("itemName").ifBlank{detail.optString("serviceName")}.ifBlank{when(costCategory(entry)){"charge"->if("家充" in tags)"家用充电"else tags.firstOrNull{it.contains("充")}?:"充电补能";"toll"->"高速通行";"repair"->"维修服务";"maintenance"->"定期保养";"parking"->"停车支出";"wash"->"洗车养护";"insurance"->detail.optString("insuranceType").ifBlank{"车辆保险"};else->ledgerCategoryName(costCategory(entry))}}
@@ -42,7 +42,7 @@ internal fun ledgerSubtitle(entry:JSONObject):String{
  return parts.joinToString(" · ").ifBlank{privateProse(ledgerNote(entry))}.ifBlank{if(entry.optString("source")=="charge")"充电记录 · 费用估算"else"手动记账"}
 }
 @Composable internal fun LedgerBillRow(entry:JSONObject,onOpen:()->Unit){val color=ledgerColor(costCategory(entry));val shape=RoundedCornerShape(18.dp)
- Row(Modifier.fillMaxWidth().cardClick(onClick=onOpen).themeCardShadow(shape).background(glassWhite,shape).border(.5.dp,glassEdge.copy(alpha=.65f),shape).padding(14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
+ Row(Modifier.fillMaxWidth().cardClick(onClick=onOpen).themeCardShadow(shape).background(glassWhite,shape).themeCardEdge(shape,.65f).padding(14.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
   Box(Modifier.size(46.dp).background(color.copy(alpha=.11f),RoundedCornerShape(13.dp)),contentAlignment=Alignment.Center){Icon(costIcon(costCategory(entry)),null,Modifier.size(23.dp),tint=color)}
   Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)){Text(privateProse(ledgerTitle(entry)),fontSize=16.sp,fontWeight=FontWeight.Medium,color=ink,maxLines=1,overflow=TextOverflow.Ellipsis);Text(ledgerSubtitle(entry),fontSize=12.sp,lineHeight=18.sp,color=muted,maxLines=2,overflow=TextOverflow.Ellipsis)}
   Column(horizontalAlignment=Alignment.End,verticalArrangement=Arrangement.spacedBy(3.dp)){Text("¥"+numberText(entry.optLong("cents")/100.0,2),fontSize=21.sp,fontWeight=FontWeight.SemiBold,color=ink);if(entry.optString("source")=="charge")Text("估算",fontSize=11.sp,color=color)}

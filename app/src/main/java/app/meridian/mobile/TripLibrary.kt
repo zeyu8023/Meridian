@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.*
@@ -15,36 +16,50 @@ import org.json.*
 import java.time.LocalDate
 
 internal fun tripDigest(j:JSONObject)=JSONObject().apply{for(key in listOf("id","tripId","carId","tripStartTime","tripEndTime","startLocation","endLocation","startAddress","endAddress","mileageKm","drivingMileage","durationMinutes","drivingDuration","avgSpeed","maxSpeed","tripEnergyConsumption","totalPowerConsumption","route"))if(j.has(key)&&!j.isNull(key))put(key,j.get(key))}
-internal fun mergeTripNoteArchive(archive:JSONObject,id:String,trip:JSONObject,text:String?=null,tag:String?=null,favorite:Boolean?=null):JSONObject{
+internal fun notebookIdentity(data:JSONObject,activeCar:String):Pair<String,String>?{
+ fun valid(value:Any?)=value?.takeIf{it!=JSONObject.NULL}?.toString()?.trim()?.takeIf{it.isNotEmpty()&&it!="null"}
+ val id=valid(data.opt("id"))?:valid(data.opt("tripId"))?:return null
+ val car=valid(data.opt("carId"))?:valid(activeCar)?:return null
+ return id to car
+}
+internal fun mergeTripNoteArchive(archive:JSONObject,id:String,trip:JSONObject,text:String?=null,tag:String?=null,favorite:Boolean?=null,choices:List<String>?=null,extra:String?=null):JSONObject{
  require(id.isNotBlank())
  val result=JSONObject(archive.toString());val note=JSONObject(result.optJSONObject(id)?.toString()?:"{}")
  if(text!=null)note.put("note",text.take(1000));if(tag!=null)note.put("tag",tag);if(favorite!=null)note.put("favorite",favorite)
+ if(choices!=null)note.put("noteChoices",JSONArray(normalizedTripNoteChoices(choices)));if(extra!=null)note.put("noteExtra",extra.take(800))
  note.put("trip",tripDigest(trip));result.put(id,note);return result
 }
 @Composable internal fun TripNotebook(api:Api,data:JSONObject){
- val id=(data.opt("id")?:data.opt("tripId"))?.toString()?:return;val carId=data.optString("carId").ifBlank{api.activeCarId};if(carId.isBlank())return
+ val identity=notebookIdentity(data,api.activeCarId)?:return;val (id,carId)=identity
  val scope=api.localScope(carId);val key="notes:"+scope;val jobScope=rememberCoroutineScope()
  var note by remember(scope,id){mutableStateOf<JSONObject?>(null)};var error by remember(scope,id){mutableStateOf("")};var saving by remember(scope,id){mutableStateOf(false)}
  var open by rememberSaveable(scope,id){mutableStateOf(false)};var text by rememberSaveable(scope,id){mutableStateOf("")};var tag by rememberSaveable(scope,id){mutableStateOf("未分类")}
+ var choices by rememberSaveable(scope,id,stateSaver=listSaver<List<String>,String>(save={it},restore={it.toList()})){mutableStateOf(emptyList<String>())}
+ var initialized by rememberSaveable(scope,id){mutableStateOf(false)}
  val reveal=remember{BringIntoViewRequester()}
  LaunchedEffect(scope,id){try{note=withContext(Dispatchers.IO){DeviceData.read(key).optJSONObject(id)?:JSONObject()}}catch(e:CancellationException){throw e}catch(_:Exception){error="手记读取失败，请重新打开详情重试"}}
- LaunchedEffect(open){if(open){withFrameNanos{};reveal.bringIntoView()}}
- fun save(favorite:Boolean?=null){if(saving||note==null)return;saving=true;error="";val draft=text;val selectedTag=tag
-  jobScope.launch{try{val saved=withContext(Dispatchers.IO){synchronized(DeviceData){val latest=DeviceData.read(key);val next=mergeTripNoteArchive(latest,id,data,if(favorite==null)draft else null,if(favorite==null)selectedTag else null,favorite);DeviceData.write(key,next);next.getJSONObject(id)}};note=saved;if(favorite==null)open=false}catch(e:CancellationException){throw e}catch(_:Exception){error="保存失败，编辑内容已保留，请重试"}finally{saving=false}}
+ LaunchedEffect(open,note){if(open&&!initialized&&note!=null){text=tripNoteExtra(note);tag=note?.optString("tag","未分类")?:"未分类";choices=readTripNoteChoices(note);initialized=true}}
+ LaunchedEffect(open){if(open){withFrameNanos{};runCatching{reveal.bringIntoView()}}}
+ fun save(favorite:Boolean?=null){if(saving||note==null)return;saving=true;error="";val extra=text;val selectedChoices=choices.toList();val draft=composeTripNote(selectedChoices,extra);val selectedTag=tag
+  jobScope.launch{try{val saved=withContext(Dispatchers.IO){synchronized(DeviceData){val latest=DeviceData.read(key);val next=mergeTripNoteArchive(latest,id,data,if(favorite==null)draft else null,if(favorite==null)selectedTag else null,favorite,if(favorite==null)selectedChoices else null,if(favorite==null)extra else null);DeviceData.write(key,next);next.getJSONObject(id)}};note=saved;if(favorite==null)open=false}catch(e:CancellationException){throw e}catch(_:Exception){error="保存失败，编辑内容已保留，请重试"}finally{saving=false}}
  }
  Panel{
   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Box(Modifier.weight(1f)){SectionTitle("我的行程手记",Icons.Outlined.BookmarkBorder)}
    ToolbarActionStrip(buildList{
     add(ToolbarAction(if(note?.optBoolean("favorite")==true)Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder,"收藏行程",enabled=note!=null&&!saving,active=note?.optBoolean("favorite")==true){save(note?.optBoolean("favorite")!=true)})
-    if(!open)add(ToolbarAction(Icons.Outlined.EditNote,"编辑备注",enabled=note!=null&&!saving){text=note?.optString("note").orEmpty();tag=note?.optString("tag","未分类")?:"未分类";error="";open=true})
+    if(!open)add(ToolbarAction(Icons.Outlined.EditNote,"编辑行程手记",enabled=!saving){initialized=false;error="";open=true})
    })
   }
   if(open)Column(Modifier.fillMaxWidth().bringIntoViewRequester(reveal),verticalArrangement=Arrangement.spacedBy(12.dp)){
-   SmallSelectionMenu(tag,listOf("未分类","通勤","旅行","工作","其他").map{it to it}){if(!saving)tag=it}
-   OutlinedTextField(text,{text=it.take(1000)},Modifier.fillMaxWidth(),enabled=!saving,label={Text("写下这次行程的记忆")},supportingText={Text("${text.length}/1000 · 仅保存在本机")},minLines=3,maxLines=6)
+   if(!initialized)FlowLoading(label="正在准备手记…")else{
+   Text("点选即可记录，所有选项都可留空",style=UiType.metadata,color=muted)
+   SmallSelectionMenu(tag,tripNoteCategories.map{it to it}){if(!saving)tag=it}
+   TripNoteQuickChoices(choices,!saving){choices=it}
+   OutlinedTextField(text,{text=it.take(800)},Modifier.fillMaxWidth(),enabled=!saving,label={Text("补充一句 · 可选")},placeholder={Text("还有什么想记住的？")},supportingText={Text("${text.length}/800 · 仅保存在本机")},minLines=1,maxLines=4)
+   }
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){
     CinemaOutlineButton({open=false;error=""},Modifier.weight(1f),enabled=!saving){Text("取消")}
-    CinemaButton({save()},Modifier.weight(1f),enabled=!saving){Text(if(saving)"保存中…"else"保存手记")}
+    CinemaButton({save()},Modifier.weight(1f),enabled=!saving&&initialized){Text(if(saving)"保存中…"else if(!initialized)"正在读取…"else"保存手记")}
    }
   }else if(note==null)Text("正在读取手记…",fontSize=13.sp,color=muted)else{
    Text(note!!.optString("tag","未分类"),fontSize=12.sp,color=accent)
@@ -56,7 +71,7 @@ internal fun mergeTripNoteArchive(archive:JSONObject,id:String,trip:JSONObject,t
 @Composable internal fun TripLibrary(api:Api,carId:Any,onClose:()->Unit){
  val revision=DeviceData.revision;val scope=api.localScope(carId);val notes=remember(scope,revision){DeviceData.read("notes:"+scope)};var tag by remember{mutableStateOf("全部")};var onlyFavorites by remember{mutableStateOf(true)};var selected by remember{mutableStateOf<JSONObject?>(null)};val action=rememberServerAction()
  val rows=notes.keys().asSequence().mapNotNull{notes.optJSONObject(it)}.filter{(!onlyFavorites||it.optBoolean("favorite"))&&(tag=="全部"||it.optString("tag")==tag)}.sortedByDescending{it.optJSONObject("trip")?.optString("tripStartTime")}.toList()
- FullscreenDataPage("行程收藏与手记",onClose){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){SmallSelectionMenu(tag,listOf("全部","通勤","旅行","工作","其他","未分类").map{it to it}){tag=it};Spacer(Modifier.weight(1f));CinemaChoice(onlyFavorites,{onlyFavorites=!onlyFavorites},{Text("仅收藏")})};Text("备注与收藏仅保存在当前设备",fontSize=12.sp,color=muted)
+ FullscreenDataPage("行程收藏与手记",onClose){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){SmallSelectionMenu(tag,(listOf("全部")+tripNoteCategories).map{it to it}){tag=it};Spacer(Modifier.weight(1f));CinemaChoice(onlyFavorites,{onlyFavorites=!onlyFavorites},{Text("仅收藏")})};Text("备注与收藏仅保存在当前设备",fontSize=12.sp,color=muted)
  if(rows.isEmpty())Panel{Text("还没有符合条件的行程");Text("打开任意行程详情，即可收藏或添加标签、备注。",fontSize=13.sp,color=muted)}
  rows.forEach{note->val trip=note.optJSONObject("trip")?:return@forEach;TripTimelineCard(trip,false){action.run{val id=trip.opt("id")?:trip.opt("tripId")?:throw Exception("缺少行程编号");selected=api.call("/car/trip/getDetail",JSONObject().put("tripId",id)).optJSONObject("data")?:throw Exception("暂无行程详情")}};note.optString("note").takeIf{it.isNotBlank()}?.let{Text(privateProse(it),fontSize=13.sp,color=muted)}};ServerNotice(action);selected?.let{TripDetailPage(api,it){selected=null}}
  }

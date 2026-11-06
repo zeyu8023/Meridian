@@ -23,16 +23,52 @@ import androidx.compose.ui.window.DialogProperties
 @Composable fun TextButton(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,content:@Composable RowScope.()->Unit)=CinemaTextButton(onClick,modifier,enabled,content)
 @Composable fun FilterChip(selected:Boolean,onClick:()->Unit,modifier:Modifier=Modifier,label:@Composable ()->Unit)=CinemaChoice(selected,onClick,label,modifier)
 @Composable fun Checkbox(checked:Boolean,onCheckedChange:(Boolean)->Unit,modifier:Modifier=Modifier)=CinemaCheck(checked,onCheckedChange,modifier)
-@Composable fun OutlinedTextField(value:String,onValueChange:(String)->Unit,modifier:Modifier=Modifier,label:(@Composable ()->Unit)?=null,placeholder:(@Composable ()->Unit)?=null,singleLine:Boolean=false,maxLines:Int=Int.MAX_VALUE,enabled:Boolean=true,visualTransformation:VisualTransformation=VisualTransformation.None,bare:Boolean=false,keyboardOptions:androidx.compose.foundation.text.KeyboardOptions=androidx.compose.foundation.text.KeyboardOptions.Default,keyboardActions:androidx.compose.foundation.text.KeyboardActions=androidx.compose.foundation.text.KeyboardActions.Default){
+@Composable fun OutlinedTextField(
+ value:String,onValueChange:(String)->Unit,modifier:Modifier=Modifier,
+ label:(@Composable ()->Unit)?=null,placeholder:(@Composable ()->Unit)?=null,
+ singleLine:Boolean=false,maxLines:Int=Int.MAX_VALUE,enabled:Boolean=true,
+ visualTransformation:VisualTransformation=VisualTransformation.None,bare:Boolean=false,
+ keyboardOptions:androidx.compose.foundation.text.KeyboardOptions=androidx.compose.foundation.text.KeyboardOptions.Default,
+ keyboardActions:androidx.compose.foundation.text.KeyboardActions=androidx.compose.foundation.text.KeyboardActions.Default,
+ minLines:Int=1,leadingIcon:(@Composable ()->Unit)?=null,trailingIcon:(@Composable ()->Unit)?=null,
+ supportingText:(@Composable ()->Unit)?=null,isError:Boolean=false,readOnly:Boolean=false
+){
  var focused by remember{mutableStateOf(false)}
  var reveal by remember{mutableStateOf(false)}
  val password=visualTransformation is PasswordVisualTransformation
  val shape=RoundedCornerShape(16.dp)
- Column(modifier,verticalArrangement=Arrangement.spacedBy(8.dp)){
-  if(label!=null)CompositionLocalProvider(LocalContentColor provides muted){ProvideTextStyle(TextStyle(fontSize=12.sp)){label()}}
-  Row(Modifier.fillMaxWidth().then(if(bare)Modifier else Modifier.formSurface(shape).border(if(focused)1.dp else .6.dp,if(focused)ink.copy(alpha=.35f)else glassEdge,shape)).padding(horizontal=if(bare)10.dp else 13.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically){
-   BasicTextField(value,onValueChange,modifier=Modifier.weight(1f).onFocusChanged{focused=it.isFocused}.padding(vertical=5.dp),keyboardOptions=keyboardOptions,keyboardActions=keyboardActions,enabled=enabled,singleLine=singleLine,maxLines=if(singleLine)1 else maxLines,visualTransformation=if(password&&reveal)VisualTransformation.None else visualTransformation,textStyle=TextStyle(color=ink,fontSize=15.sp,lineHeight=22.sp),cursorBrush=SolidColor(ink),decorationBox={inner->Box{if(value.isEmpty()&&placeholder!=null)CompositionLocalProvider(LocalContentColor provides muted){placeholder()};inner()}})
-   if(password)CinemaIconButton({reveal=!reveal}){Icon(if(reveal)Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,if(reveal)"隐藏密码"else"显示密码",Modifier.size(18.dp),tint=muted)}
+ val foreground=if(enabled)ink else muted
+ val stateColor=if(isError)MaterialTheme.colorScheme.error else if(focused)accent else glassEdge
+ val inputStyle=TextStyle(color=foreground,fontSize=15.sp,lineHeight=22.sp)
+ Column(modifier,verticalArrangement=Arrangement.spacedBy(6.dp)){
+  if(label!=null)CompositionLocalProvider(LocalContentColor provides if(isError)stateColor else muted){
+   ProvideTextStyle(TextStyle(fontSize=13.sp,lineHeight=18.sp,fontWeight=FontWeight.Medium)){label()}
+  }
+  Row(Modifier.fillMaxWidth().heightIn(min=48.dp)
+   .then(if(bare)Modifier else Modifier.formSurface(shape).border(if(focused||isError)1.dp else .6.dp,stateColor,shape))
+   .padding(horizontal=if(bare)10.dp else 13.dp,vertical=8.dp),
+   horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically){
+   if(leadingIcon!=null)CompositionLocalProvider(LocalContentColor provides muted){leadingIcon()}
+   BasicTextField(value,onValueChange,
+    modifier=Modifier.weight(1f).onFocusChanged{focused=it.isFocused}.padding(vertical=5.dp),
+    keyboardOptions=keyboardOptions,keyboardActions=keyboardActions,enabled=enabled,readOnly=readOnly,
+    singleLine=singleLine,maxLines=if(singleLine)1 else maxLines,
+    minLines=if(singleLine)1 else minLines.coerceIn(1,maxLines.coerceAtLeast(1)),
+    visualTransformation=if(password&&reveal)VisualTransformation.None else visualTransformation,
+    textStyle=inputStyle,cursorBrush=SolidColor(if(isError)stateColor else accent),
+    decorationBox={inner->Box{
+     if(value.isEmpty()&&placeholder!=null)CompositionLocalProvider(LocalContentColor provides muted){
+      ProvideTextStyle(inputStyle.copy(color=muted)){placeholder()}
+     }
+     inner()
+    }})
+   if(trailingIcon!=null)CompositionLocalProvider(LocalContentColor provides muted){trailingIcon()}
+   else if(password)CinemaIconButton({reveal=!reveal},enabled=enabled){
+    Icon(if(reveal)Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,if(reveal)"隐藏密码"else"显示密码",Modifier.size(18.dp),tint=muted)
+   }
+  }
+  if(supportingText!=null)CompositionLocalProvider(LocalContentColor provides if(isError)stateColor else muted){
+   ProvideTextStyle(TextStyle(fontSize=12.sp,lineHeight=18.sp)){supportingText()}
   }
  }
 }

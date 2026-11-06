@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.semantics.*
 import org.json.*
 import kotlin.math.*
 
@@ -24,7 +25,7 @@ fun chartSamples(rows:JSONArray,key:String,scale:Double=1.0,dateKey:String="date
 @Composable fun InteractiveTrend(title:String,unit:String,samples:List<ChartSample>,framed:Boolean=true){
  val content:@Composable ColumnScope.()->Unit={
   var selected by remember(samples){mutableIntStateOf((samples.size-1).coerceAtLeast(0))}
-  val color=accent;val grid=glassEdge;val secondary=muted
+  val color=metricColor(title,LocalPalette.current);val grid=glassEdge;val secondary=muted
   Text(title,fontSize=15.sp,fontWeight=FontWeight.SemiBold,color=ink)
   if(samples.isEmpty())Text("暂无有效数据",fontSize=12.sp,color=muted)else{
    val point=samples[selected.coerceIn(samples.indices)]
@@ -32,7 +33,7 @@ fun chartSamples(rows:JSONArray,key:String,scale:Double=1.0,dateKey:String="date
    if(navigate!=null&&date!=null)CinemaTonalButton({navigate(date)}){Icon(Icons.Outlined.Route,null,Modifier.size(16.dp));Spacer(Modifier.width(5.dp));Text("查看当天行程",fontSize=12.sp)}
    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.Bottom,horizontalArrangement=Arrangement.SpaceBetween){Column{Text(point.label,fontSize=11.sp,color=muted);Text(numberText(point.value)+if(unit.isBlank())""else" $unit",fontSize=22.sp,fontWeight=FontWeight.SemiBold,color=ink)};Text("轻点 / 横滑查看",fontSize=11.sp,color=muted)}
    val low=min(0.0,samples.minOf{it.value});val high=samples.maxOf{it.value}.coerceAtLeast(low+.01)
-   Canvas(Modifier.fillMaxWidth().height(166.dp).padding(vertical=10.dp)
+   Canvas(Modifier.fillMaxWidth().height(166.dp).semantics{contentDescription="$title，${point.label}，${numberText(point.value)} $unit"}.padding(vertical=10.dp)
     .pointerInput(samples){detectTapGestures{p->selected=((p.x/size.width.coerceAtLeast(1))*(samples.size-1)).roundToInt().coerceIn(samples.indices)}}
     .pointerInput(samples){detectHorizontalDragGestures{change,_->change.consume();selected=((change.position.x/size.width.coerceAtLeast(1))*(samples.size-1)).roundToInt().coerceIn(samples.indices)}}){
     fun pos(i:Int)=Offset(if(samples.size==1)size.width/2 else size.width*i/(samples.size-1),(size.height*(1-(samples[i].value-low)/(high-low))).toFloat())

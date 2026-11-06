@@ -85,7 +85,7 @@ import kotlin.math.roundToInt
      AppearanceToggle("显示导航文字","隐藏时保留图标及无障碍名称",options.showNavigationLabels){onChange(options.copy(showNavigationLabels=it))}
      CinemaTextButton({onChange(options.copy(navigationScale=1f,lastNavigationScale=1f))}){Text("重置导航大小 100%")}
      Text("实时预览 · 可点击或滑动切换",fontSize=11.sp,color=muted)
-     Box(Modifier.fillMaxWidth().heightIn(min=(navigationBottomSpaceDp(options.showNavigationLabels,14f*LocalSystemDensity.current.fontScale,options.interfaceScale,options.navigationScale,false)+40).dp)){
+     Box(Modifier.fillMaxWidth().heightIn(min=(navigationBottomSpaceDp(options.showNavigationLabels,16f*LocalSystemDensity.current.fontScale,options.interfaceScale,options.navigationScale,false)+40).dp)){
       Row(Modifier.matchParentSize().hazeSource(haze).clip(RoundedCornerShape(20.dp)).background(softWash),horizontalArrangement=Arrangement.SpaceEvenly){repeat(5){i->Box(Modifier.padding(top=(15+i*9).dp).size(48.dp).background(flowAccentColors[(i+4)%9].copy(alpha=.45f),CircleShape))}}
       MeridianNavigationDock(previewTab,haze,options.glass,{previewTab=it},Modifier.align(Alignment.BottomCenter),preview=true)
      }

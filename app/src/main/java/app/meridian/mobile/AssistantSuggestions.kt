@@ -17,18 +17,30 @@ import androidx.compose.ui.unit.*
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun AssistantSuggestions(questions:List<String>,onSelect:(String)->Unit){
  FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
-  questions.forEachIndexed{i,question->
+  questions.forEach{question->
    val label=when{question.contains("用车表现")->"用车分析";question.contains("当前车辆")->"车辆状态";question.contains("最耗电")->"高耗电行程";question.contains("充电记录")->"充电与补能";question.contains("月")&&question.contains("里程")->"月度里程对比";question.contains("辅助驾驶")->"辅助驾驶";else->question}
    val shape=RoundedCornerShape(22.dp);val source=androidx.compose.runtime.remember{androidx.compose.foundation.interaction.MutableInteractionSource()}
    Box(Modifier.widthIn(max=240.dp).heightIn(min=44.dp).motionPress(source).clip(shape).clickable(interactionSource=source,indication=null,role=Role.Button){onSelect(question)}.semantics{contentDescription=question}){
     SuggestionGlassSurface(shape,Modifier.matchParentSize())
     Row(Modifier.padding(horizontal=11.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
-     Icon(when(i%3){0->Icons.Outlined.Insights;1->Icons.Outlined.VerifiedUser;else->Icons.Outlined.Bolt},null,Modifier.size(14.dp),tint=accent)
-     Text(label,fontSize=13.sp,lineHeight=20.sp,color=ink,modifier=Modifier.weight(1f,false))
+     Icon(suggestionIcon(question),null,Modifier.size(16.dp),tint=accent)
+     Text(label,style=UiType.label,color=ink,modifier=Modifier.weight(1f,false))
     }
    }
   }
  }
+}
+
+internal fun suggestionIcon(question:String)=when{
+ question.contains("充电")||question.contains("补能")->Icons.Outlined.EvStation
+ question.contains("停")||question.contains("位置")||question.contains("附近")->Icons.Outlined.LocationOn
+ question.contains("辅助")||question.contains("智驾")->Icons.Outlined.AutoMode
+ question.contains("任务")->Icons.Outlined.Checklist
+ question.contains("风格")||question.contains("安全")->Icons.Outlined.VerifiedUser
+ question.contains("耗电")||question.contains("能耗")->Icons.Outlined.Bolt
+ question.contains("里程")||question.contains("行程")->Icons.Outlined.Route
+ question.contains("状态")||question.contains("车况")->Icons.Outlined.DirectionsCar
+ else->Icons.Outlined.Insights
 }
 
 @Composable private fun SuggestionGlassSurface(shape:Shape,modifier:Modifier){

@@ -40,7 +40,7 @@ import java.time.LocalDate
   if(saved!=null){rows=saved;busy=false}else{busy=true;try{val result=api.call("/dashboard/get",JSONObject().put("carId",carId).put("statDate",date.toString())).optJSONObject("data");rows=result?.optJSONArray("dailyBrief")?:JSONArray();cache[date]=rows}catch(e:Exception){if(e is CancellationException)throw e;error=e.message?:"简报读取失败"}finally{busy=false}}
  }
  if(calendar)FlowDatePicker(date,{calendar=false}){date=it;calendar=false}
- if(detail)FullscreenDataPage("${date} · 行车简报",{detail=false}){HomeDetail(JSONObject().put("metrics",rows))}
+ if(detail)DailyTripsPage(api,carId,date,rows){detail=false}
  Panel{
   if(compact)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
    Text(if(date==today)"今日概览"else"当日概览",fontSize=16.sp,fontWeight=androidx.compose.ui.text.font.FontWeight.SemiBold,modifier=Modifier.weight(1f))
@@ -56,7 +56,10 @@ import java.time.LocalDate
   if(busy)FlowLoading(label="正在读取当天简报…")else if(error.isNotBlank()){Text(error,color=MaterialTheme.colorScheme.error,fontSize=12.sp);TextButton({cache.remove(date);reload++}){Text("重试")}}else{
    if(rows.length()==0)Text("当天暂无用车记录",fontSize=12.sp,color=muted)
    val tiles=rows.objects().map{dailyBriefMetric(it,date==today)}
-   if(compact)CompactDailyMetrics(tiles)else HomeMetricTiles(tiles)
+   Column(Modifier.fillMaxWidth().cardClick{detail=true},verticalArrangement=Arrangement.spacedBy(10.dp)){
+    if(compact)CompactDailyMetrics(tiles)else HomeMetricTiles(tiles)
+    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically){Text("查看当日全部行程",fontSize=13.sp,color=accent);Icon(Icons.Outlined.ChevronRight,null,Modifier.size(16.dp),tint=accent)}
+   }
    if(compact&&trend!=null)HomeMiniTrend(trend)
   }
  }

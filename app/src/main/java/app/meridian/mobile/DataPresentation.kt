@@ -13,6 +13,8 @@ fun JSONObject.safeText(key:String,fallback:String=""):String {
 }
 
 fun metricIcon(label:String):ImageVector=when {
+ label.contains("辅助")||label.contains("智驾")->Icons.Outlined.AutoMode
+ label.contains("费用")||label.contains("账单")||label.contains("支出")->Icons.Outlined.AccountBalanceWallet
  label.contains("电量")||label.contains("电池")->Icons.Outlined.BatteryChargingFull
  label.contains("能耗")||label.contains("耗电")->Icons.Outlined.Bolt
  label.contains("充电")||label.contains("补能")->Icons.Outlined.EvStation

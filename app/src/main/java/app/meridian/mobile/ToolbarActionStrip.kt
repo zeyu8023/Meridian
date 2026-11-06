@@ -11,15 +11,15 @@ import androidx.compose.runtime.*
 import app.meridian.mobile.glass.LocalInsideGlassChrome
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.*
 internal data class ToolbarAction(val icon:ImageVector,val label:String,val enabled:Boolean=true,val active:Boolean=false,val run:()->Unit)
 @Composable internal fun ToolbarActionStrip(actions:List<ToolbarAction>){
  val source=remember{MutableInteractionSource()};val pressed by source.collectIsPressedAsState();val backdrop=LocalControlBackdrop.current
- Box(Modifier.width((actions.size*40).dp).height(44.dp),contentAlignment=Alignment.Center){
+ Box(Modifier.width((actions.size*44).dp).height(44.dp),contentAlignment=Alignment.Center){
   if(backdrop!=null)GlassChrome(backdrop,Modifier.fillMaxWidth().height(32.dp),shape=CircleShape,cover=.10f,optical=true,captureAll=true,elevated=true,pressed=pressed,navigationFrame=true,refractionStrength=1.1f,edgeWidthDp=5f){}
   else CompositionLocalProvider(LocalInsideGlassChrome provides false){SharedGlassControl(CircleShape,Modifier.fillMaxWidth().height(32.dp),pressed=pressed)}
-  Row(Modifier.fillMaxSize()){actions.forEach{action->Box(Modifier.weight(1f).fillMaxHeight().clickable(interactionSource=source,indication=null,enabled=action.enabled,role=Role.Button,onClickLabel=action.label,onClick=action.run),contentAlignment=Alignment.Center){Icon(action.icon,action.label,Modifier.size(18.dp),tint=(if(action.active)accent else ink).copy(alpha=if(action.enabled)1f else .35f))}}}
+  Row(Modifier.fillMaxSize()){actions.forEach{action->Box(Modifier.weight(1f).fillMaxHeight().clickable(interactionSource=source,indication=null,enabled=action.enabled,role=Role.Button,onClickLabel=action.label,onClick=action.run).then(if(action.active)Modifier.semantics{stateDescription="已开启"}else Modifier),contentAlignment=Alignment.Center){Icon(action.icon,action.label,Modifier.size(18.dp),tint=(if(action.active)accent else ink).copy(alpha=if(action.enabled)1f else .35f))}}}
  }
 }
 

@@ -92,15 +92,15 @@ internal object UiType{val label=TextStyle(fontSize=14.sp,lineHeight=20.sp);val 
 }
 
 @Composable fun CinemaChoice(selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    val ink=MaterialTheme.colorScheme.onSurface
+    val ink=if(selected)readableTint(accent,glassWhite) else MaterialTheme.colorScheme.onSurface
     val compact=LocalPlayerMenu.current
     val settings=LocalControlSettings.current
     val choiceShape=if(settings)RoundedCornerShape(12.dp) else ControlShape
     val interaction=remember{MutableInteractionSource()}
     val pressed by interaction.collectIsPressedAsState()
     val backdrop=if(!settings && !compact && !LocalInsideGlassChrome.current && LocalAppearance.current.glass && androidx.compose.ui.platform.LocalView.current.parent !is androidx.compose.ui.window.DialogWindowProvider)LocalControlBackdrop.current else null
-    val fill by androidx.compose.animation.animateColorAsState(ink.copy(alpha=if(selected).085f else .018f),tween(LocalAppMotion.current.duration(120)),label="choiceTint")
-    val edge by androidx.compose.animation.animateColorAsState(ink.copy(alpha=if(selected).23f else .07f),tween(LocalAppMotion.current.duration(140,60)),label="choiceEdge")
+    val fill by androidx.compose.animation.animateColorAsState(ink.copy(alpha=if(selected).15f else .018f),tween(LocalAppMotion.current.duration(120)),label="choiceTint")
+    val edge by androidx.compose.animation.animateColorAsState(ink.copy(alpha=if(selected).5f else .07f),tween(LocalAppMotion.current.duration(140,60)),label="choiceEdge")
     val selection=animateFloatAsState(if(selected)1f else 0f,tween(LocalAppMotion.current.duration(140,60)),label="choiceSelection")
     val fullMotion=LocalAppMotion.current.full
     val plate=Modifier.background(fill).border(.7.dp,edge,choiceShape)
@@ -113,7 +113,7 @@ internal object UiType{val label=TextStyle(fontSize=14.sp,lineHeight=20.sp);val 
                 alpha=selection.value
                 scaleX=if(fullMotion).86f+.14f*selection.value else 1f;scaleY=scaleX
             },tint=ink)
-            CompositionLocalProvider(LocalContentColor provides ink){ProvideTextStyle(UiType.label){label()}}
+            CompositionLocalProvider(LocalContentColor provides ink){ProvideTextStyle(UiType.label.copy(fontWeight=if(selected)FontWeight.SemiBold else FontWeight.Normal)){label()}}
         }
     }
 }
